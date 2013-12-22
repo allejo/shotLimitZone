@@ -46,6 +46,11 @@ public:
     // If the value is greater than -1, then that means the player has grabbed a flag
     // with a shot limit so we'll keep count of how many.
     int playerShotsRemaining[256];
+
+    // We'll keeping track if we need to send a player a message after their first shot to
+    // show them that they have a limited number of shots. If the shot limit is 10 and this
+    // value is set to true, the we will warn them at 9 shots remaining.
+    bool firstShotWarning[256];
 };
 
 BZ_PLUGIN(shotLimitZone)
@@ -108,7 +113,7 @@ bool shotLimitZone::MapObject(bz_ApiString object, bz_CustomMapObjectInfo *data)
             std::string checkval = bz_tolower(values->get(0).c_str());
 
             // Check if we found the position specifications
-            if (checkval == "position" && values->size() > 3)
+            if ((checkval == "position" || checkval == "pos") && values->size() > 3)
             {
                 newSLZ.position[0] = (float)atof(values->get(1).c_str());
                 newSLZ.position[1] = (float)atof(values->get(2).c_str());
@@ -169,16 +174,19 @@ void shotLimitZone::Event(bz_EventData *eventData)
             {
                 bz_FlagDroppedEventData_V1* data = (bz_FlagDroppedEventData_V1*)eventData;
                 playerShotsRemaining[data->playerID] = -1;
+                firstShotWarning[data->playerID] = false;
             }
             else if (eventData->eventType == bz_ePlayerDieEvent)
             {
                 bz_PlayerDieEventData_V1* data = (bz_PlayerDieEventData_V1*)eventData;
                 playerShotsRemaining[data->playerID] = -1;
+                firstShotWarning[data->playerID] = false;
             }
             else if (eventData->eventType == bz_ePlayerJoinEvent)
             {
                 bz_PlayerJoinPartEventData_V1* data = (bz_PlayerJoinPartEventData_V1*)eventData;
                 playerShotsRemaining[data->playerID] = -1;
+                firstShotWarning[data->playerID] = false;
             }
         }
         break;
@@ -201,6 +209,7 @@ void shotLimitZone::Event(bz_EventData *eventData)
                     if (bz_getFlagName(flagData->flagID).c_str() == slzs[i].flagType)
                     {
                         playerShotsRemaining[flagData->playerID] = slzs[i].shotLimit;
+                        firstShotWarning[flagData->playerID] = true;
                     }
                 }
             }
@@ -226,10 +235,19 @@ void shotLimitZone::Event(bz_EventData *eventData)
                     // Take the player's flag
                     bz_removePlayerFlag(playerID);
                 }
-                else if (playerShotsRemaining[playerID] % 5 == 0 || playerShotsRemaining[playerID] < 5)
+                else if (playerShotsRemaining[playerID] % 5 == 0 ||
+                         playerShotsRemaining[playerID] <= 3 ||
+                         firstShotWarning[playerID])
                 {
-                    // If the shot count is less than 5 or is divisable by 5, notify the player
-                    bz_sendTextMessagef(BZ_SERVER, playerID, "%i shots remaining", playerShotsRemaining[playerID]);
+                    // If the shot count is less than or equal to 3, is divisable by 5, or it's their first shot
+                    // after the flag grab, notify the player
+                    bz_sendTextMessagef(BZ_SERVER, playerID, "%i shots left", playerShotsRemaining[playerID]);
+
+                    // If we have sent their first warning, then let's forget about it
+                    if (firstShotWarning[playerID])
+                    {
+                        firstShotWarning[playerID] = false;
+                    }
                 }
             }
         }
