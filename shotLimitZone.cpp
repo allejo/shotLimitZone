@@ -81,7 +81,7 @@ void shotLimitZone::Cleanup()
 bool shotLimitZone::MapObject(bz_ApiString object, bz_CustomMapObjectInfo *data)
 {
     // We only need to keep track of our special zones, so ignore everything else
-    if (object != "shotLimitZone" || !data)
+    if (object != "SHOTLIMITZONE" || !data)
     {
         return 0;
     }
@@ -124,15 +124,15 @@ bool shotLimitZone::MapObject(bz_ApiString object, bz_CustomMapObjectInfo *data)
             }
 
             // Check if we found the shot limit specification
-            if (checkval == "shotLimit" && values->size() > 1)
+            if (checkval == "shotlimit" && values->size() > 1)
             {
-                newSLZ.shotLimit = (int)atof(values->get(1).c_str());
+                newSLZ.shotLimit = atoi(values->get(1).c_str());
             }
 
             // Check if we found the flag we'll be limiting
             if (checkval == "flag" && values->size() > 1)
             {
-                newSLZ.flagType = values->get(1).c_str();
+                newSLZ.flagType = bz_toupper(values->get(1).c_str());
             }
         }
 
@@ -141,7 +141,7 @@ bool shotLimitZone::MapObject(bz_ApiString object, bz_CustomMapObjectInfo *data)
     }
 
     // Send a debug message of the zone we're monitoring
-    bz_debugMessagef(1, "A shotLimitZone has been found, zone loaded with credentials:\nPos: [%lf,%lf,%lf]\nSize: [%lf,%lf,%lf]\nShot Limit: %lf\nFlag: %s",
+    bz_debugMessagef(1, "A shotLimitZone has been found, zone loaded with credentials:\nPos: [%lf, %lf, %lf]\nSize: [%lf, %lf, %lf]\nShot Limit: %i\nFlag: %s",
 		     newSLZ.position[0], newSLZ.position[1], newSLZ.position[2], newSLZ.size[0], newSLZ.size[1], newSLZ.size[2], newSLZ.shotLimit, newSLZ.flagType.c_str());
 
     // Add the information we got and add it to the struct
@@ -218,18 +218,18 @@ void shotLimitZone::Event(bz_EventData *eventData)
                 // They fired a shot so let's decrement the remaining shots
                 playerShotsRemaining[playerID]--;
 
-                if (playerShotsRemaining[playerID] % 5 || playerShotsRemaining[playerID] < 5)
-                {
-                    // If the shot count is less than 5 or is divisable by 5, notify the player
-                    bz_sendTextMessagef(BZ_SERVER, playerID, "%i shots remaining", playerShotsRemaining[playerID]);
-                }
-                else if (playerShotsRemaining[playerID] == 0)
+                if (playerShotsRemaining[playerID] == 0)
                 {
                     // Decrement the shot count so we can drop down to -1 so we can ignore it in the future
                     playerShotsRemaining[playerID]--;
 
                     // Take the player's flag
                     bz_removePlayerFlag(playerID);
+                }
+                else if (playerShotsRemaining[playerID] % 5 == 0 || playerShotsRemaining[playerID] < 5)
+                {
+                    // If the shot count is less than 5 or is divisable by 5, notify the player
+                    bz_sendTextMessagef(BZ_SERVER, playerID, "%i shots remaining", playerShotsRemaining[playerID]);
                 }
             }
         }
