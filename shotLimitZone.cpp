@@ -43,8 +43,8 @@ public:
     };
     std::vector<shotLimitZones> slzs;
 
-	// Keep track of all of the flags that are picked up and are limited
-	std::vector<int> activeFlagIDs;
+    // Keep track of all of the flags that are picked up and are limited
+    std::vector<int> activeFlagIDs;
 
     // We'll be keeping track of how many shots a player has remaining in a single array
     // If the value is greater than -1, then that means the player has grabbed a flag
@@ -151,7 +151,7 @@ bool shotLimitZone::MapObject(bz_ApiString object, bz_CustomMapObjectInfo *data)
 
     // Send a debug message of the zone we're monitoring
     bz_debugMessagef(1, "A shotLimitZone has been found, zone loaded with credentials:\nPos: [%lf, %lf, %lf]\nSize: [%lf, %lf, %lf]\nShot Limit: %i\nFlag: %s",
-		     newSLZ.position[0], newSLZ.position[1], newSLZ.position[2], newSLZ.size[0], newSLZ.size[1], newSLZ.size[2], newSLZ.shotLimit, newSLZ.flagType.c_str());
+             newSLZ.position[0], newSLZ.position[1], newSLZ.position[2], newSLZ.size[0], newSLZ.size[1], newSLZ.size[2], newSLZ.shotLimit, newSLZ.flagType.c_str());
 
     // Add the information we got and add it to the struct
     slzs.push_back(newSLZ);
@@ -189,23 +189,23 @@ void shotLimitZone::Event(bz_EventData *eventData)
         break;
 
         case bz_eFlagDroppedEvent:
-		{
-			bz_FlagDroppedEventData_V1* flagDropData = (bz_FlagDroppedEventData_V1*)eventData;
+        {
+            bz_FlagDroppedEventData_V1* flagDropData = (bz_FlagDroppedEventData_V1*)eventData;
 
             playerShotsRemaining[flagDropData->playerID] = -1;
             firstShotWarning[flagDropData->playerID] = false;
 
-			if (std::find(activeFlagIDs.begin(), activeFlagIDs.end(), flagDropData->flagID) != activeFlagIDs.end())
-			{
-			    // If a limited flag is dropped then reset it
-				bz_resetFlag(flagDropData->flagID);
+            if (std::find(activeFlagIDs.begin(), activeFlagIDs.end(), flagDropData->flagID) != activeFlagIDs.end())
+            {
+                // If a limited flag is dropped then reset it
+                bz_resetFlag(flagDropData->flagID);
 
-				// Remove the flag ID from the vector so it can no longer be marked as active
-				int vectorPosition = std::find(activeFlagIDs.begin(), activeFlagIDs.end(), flagDropData->flagID) - activeFlagIDs.begin();
-				activeFlagIDs.erase(activeFlagIDs.begin() + vectorPosition);
-			}
-		}
-		break;
+                // Remove the flag ID from the vector so it can no longer be marked as active
+                int vectorPosition = std::find(activeFlagIDs.begin(), activeFlagIDs.end(), flagDropData->flagID) - activeFlagIDs.begin();
+                activeFlagIDs.erase(activeFlagIDs.begin() + vectorPosition);
+            }
+        }
+        break;
 
         case bz_eFlagGrabbedEvent:
         {
@@ -224,15 +224,15 @@ void shotLimitZone::Event(bz_EventData *eventData)
                 {
                     if (bz_getFlagName(flagData->flagID).c_str() == slzs[i].flagType)
                     {
-						// Keep track of shot limits here
+                        // Keep track of shot limits here
                         playerShotsRemaining[flagData->playerID] = slzs[i].shotLimit;
                         firstShotWarning[flagData->playerID] = true;
 
-						// Because we don't want people to drop the flag outside the zone and then grab it again
-						// we'll be keeping track of flag IDs and watch the flag dropped to reset them if it's
-						// out of our limited flags
-						activeFlagIDs.push_back(flagData->flagID);
-					}
+                        // Because we don't want people to drop the flag outside the zone and then grab it again
+                        // we'll be keeping track of flag IDs and watch the flag dropped to reset them if it's
+                        // out of our limited flags
+                        activeFlagIDs.push_back(flagData->flagID);
+                    }
                 }
             }
         }
