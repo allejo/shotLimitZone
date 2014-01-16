@@ -200,7 +200,7 @@ void shotLimitZone::Event(bz_EventData *eventData)
 				bz_resetFlag(flagDropData->flagID);
 				
 				// Remove the flag ID from the vector so it can no longer be marked as active
-				int vectorPosition = find(activeFlagIDs.begin(), activeFlagIDs.end(), flagDropData->flagID) - activeFlagIDs.begin();
+				int vectorPosition = std::find(activeFlagIDs.begin(), activeFlagIDs.end(), flagDropData->flagID) - activeFlagIDs.begin();
 				activeFlagIDs.erase(vectorPosition);
 			}
 		}
