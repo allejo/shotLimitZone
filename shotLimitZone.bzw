@@ -4,7 +4,7 @@ options
     +f GM{10}
     -loadplugin /path/to/shotLimitZone.so
     -ms 5
-    -set _maxFlabGrabs 1
+    -set _maxFlagGrabs 1
     -set _worldSize 400
     -sl GM 10
 end
