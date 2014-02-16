@@ -33,6 +33,8 @@ public:
 
     virtual bool MapObject (bz_ApiString object, bz_CustomMapObjectInfo *data);
 
+    virtual void removeActiveFlag(int flagID);
+
     // Store all the custom shot limit zones in a struct so we can loop through them
     struct shotLimitZones
     {
@@ -199,10 +201,8 @@ void shotLimitZone::Event(bz_EventData *eventData)
             {
                 // If a limited flag is dropped then reset it
                 bz_resetFlag(flagDropData->flagID);
+                removeActiveFlag(flagDropData->flagID);
 
-                // Remove the flag ID from the vector so it can no longer be marked as active
-                int vectorPosition = std::find(activeFlagIDs.begin(), activeFlagIDs.end(), flagDropData->flagID) - activeFlagIDs.begin();
-                activeFlagIDs.erase(activeFlagIDs.begin() + vectorPosition);
             }
         }
         break;
@@ -254,6 +254,9 @@ void shotLimitZone::Event(bz_EventData *eventData)
                     // Decrement the shot count so we can drop down to -1 so we can ignore it in the future
                     playerShotsRemaining[playerID]--;
 
+                    // Mark the flag that player has as inactive
+                    removeActiveFlag(bz_getPlayerFlagID(playerID));
+
                     // Take the player's flag
                     bz_removePlayerFlag(playerID);
                 }
@@ -277,5 +280,15 @@ void shotLimitZone::Event(bz_EventData *eventData)
 
         default:
         break;
+    }
+}
+
+void shotLimitZone::removeActiveFlag(int flagID)
+{
+    if (std::find(activeFlagIDs.begin(), activeFlagIDs.end(), flagID) != activeFlagIDs.end())
+    {
+        // Remove the flag ID from the vector so it can no longer be marked as active
+        int vectorPosition = std::find(activeFlagIDs.begin(), activeFlagIDs.end(), flagID) - activeFlagIDs.begin();
+        activeFlagIDs.erase(activeFlagIDs.begin() + vectorPosition);
     }
 }
