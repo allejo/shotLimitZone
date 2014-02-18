@@ -152,7 +152,7 @@ bool shotLimitZone::MapObject(bz_ApiString object, bz_CustomMapObjectInfo *data)
     }
 
     // Send a debug message of the zone we're monitoring
-    bz_debugMessagef(1, "A shotLimitZone has been found, zone loaded with credentials:\nPos: [%lf, %lf, %lf]\nSize: [%lf, %lf, %lf]\nShot Limit: %i\nFlag: %s",
+    bz_debugMessagef(2, "A shotLimitZone has been found, zone loaded with credentials:\nPos: [%lf, %lf, %lf]\nSize: [%lf, %lf, %lf]\nShot Limit: %i\nFlag: %s",
              newSLZ.position[0], newSLZ.position[1], newSLZ.position[2], newSLZ.size[0], newSLZ.size[1], newSLZ.size[2], newSLZ.shotLimit, newSLZ.flagType.c_str());
 
     // Add the information we got and add it to the struct
