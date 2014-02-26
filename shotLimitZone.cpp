@@ -194,16 +194,15 @@ void shotLimitZone::Event(bz_EventData *eventData)
         {
             bz_FlagDroppedEventData_V1* flagDropData = (bz_FlagDroppedEventData_V1*)eventData;
 
-            playerShotsRemaining[flagDropData->playerID] = -1;
-            firstShotWarning[flagDropData->playerID] = false;
-
-            if (!activeFlagIDs.empty() && std::find(activeFlagIDs.begin(), activeFlagIDs.end(), flagDropData->flagID) != activeFlagIDs.end())
+            if (playerShotsRemaining[flagDropData->playerID] > 0)
             {
                 // If a limited flag is dropped then reset it
                 bz_resetFlag(flagDropData->flagID);
                 removeActiveFlag(flagDropData->flagID);
-
             }
+
+            playerShotsRemaining[flagDropData->playerID] = -1;
+            firstShotWarning[flagDropData->playerID] = false;
         }
         break;
 
