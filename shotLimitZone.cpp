@@ -197,7 +197,7 @@ void shotLimitZone::Event(bz_EventData *eventData)
             playerShotsRemaining[flagDropData->playerID] = -1;
             firstShotWarning[flagDropData->playerID] = false;
 
-            if (std::find(activeFlagIDs.begin(), activeFlagIDs.end(), flagDropData->flagID) != activeFlagIDs.end())
+            if (!activeFlagIDs.empty() && std::find(activeFlagIDs.begin(), activeFlagIDs.end(), flagDropData->flagID) != activeFlagIDs.end())
             {
                 // If a limited flag is dropped then reset it
                 bz_resetFlag(flagDropData->flagID);
@@ -285,7 +285,7 @@ void shotLimitZone::Event(bz_EventData *eventData)
 
 void shotLimitZone::removeActiveFlag(int flagID)
 {
-    if (std::find(activeFlagIDs.begin(), activeFlagIDs.end(), flagID) != activeFlagIDs.end())
+    if (!activeFlagIDs.empty() && std::find(activeFlagIDs.begin(), activeFlagIDs.end(), flagID) != activeFlagIDs.end())
     {
         // Remove the flag ID from the vector so it can no longer be marked as active
         int vectorPosition = std::find(activeFlagIDs.begin(), activeFlagIDs.end(), flagID) - activeFlagIDs.begin();
