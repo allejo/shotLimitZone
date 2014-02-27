@@ -188,12 +188,23 @@ void shotLimitZone::Event(bz_EventData *eventData)
         {
             bz_FlagDroppedEventData_V1* flagDropData = (bz_FlagDroppedEventData_V1*)eventData;
 
+            // On occasion, the bz_FlagDroppedEventData_V1* will set playerID to negative one, and since I am using the playerID
+            // as an array index, if the playerID is negative then there'll be a segfault. To prevent this from happening, I will
+            // simply exit out of this case if the playerID is set to -1.
+            if (flagDropData->playerID < 0)
+            {
+                bz_resetFlag(flagDropData->flagID);
+                return;
+            }
+
+            // If the player who dropped the flag had shots remaining with the flag, don't let them regrab it so reset the flag
+            // as soon as they drop it
             if (playerShotsRemaining[flagDropData->playerID] > 0)
             {
-                // If a limited flag is dropped then reset it
                 bz_resetFlag(flagDropData->flagID);
             }
 
+            // Reset their array values for next usage
             playerShotsRemaining[flagDropData->playerID] = -1;
             firstShotWarning[flagDropData->playerID] = false;
         }
@@ -250,7 +261,7 @@ void shotLimitZone::Event(bz_EventData *eventData)
                 {
                     // If the shot count is less than or equal to 3, is divisable by 5, or it's their first shot
                     // after the flag grab, notify the player
-                    bz_sendTextMessagef(BZ_SERVER, playerID, "%i shots left", playerShotsRemaining[playerID]);
+                    bz_sendTextMessagef(BZ_SERVER, playerID, "%i shot%s left", playerShotsRemaining[playerID], (playerShotsRemaining[playerID] > 1) ? "s" : "");
 
                     // If we have sent their first warning, then let's forget about it
                     if (firstShotWarning[playerID])
