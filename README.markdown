@@ -13,7 +13,7 @@ Compiling
 
 ### Requirement
 
-- BZFlag 2.4.0+
+- BZFlag 2.4.3+ (after Jan 8th 2014)
 
 ### How to Compile
 
@@ -89,6 +89,17 @@ In this example, any SW flag grabbed from inside of this zone will be limited to
 * The name ('shotLimitZone') of the object is case-insensitive so camel case is not required.
 * The "position" field can also be written shorthand as "pos."
 * These special zones cannot be rotated as of right now; this will be implemented in a future release.
+
+Planned Features
+----------------
+
+This plugin has a lot of room for additions and these are the ones I have in mind. If you don't see your idea here, please suggest it by creating an "issue" and marking it as an "enchancement."
+
+- Support more than flag type per zone
+
+- Add rotation support for the shotLimitZone
+
+- Add possible zone generation to the world blob to spawn a flag instead of forcing the user to add it?
 
 License
 -------
