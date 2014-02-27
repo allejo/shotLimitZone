@@ -18,7 +18,6 @@ Shot Limit Zone
 
 #include <algorithm>
 #include <iostream>
-#include <memory>
 #include <stdio.h>
 
 #include "bzfsAPI.h"
@@ -33,8 +32,6 @@ public:
 
     virtual bool MapObject (bz_ApiString object, bz_CustomMapObjectInfo *data);
 
-    virtual void removeActiveFlag(int flagID);
-
     // Store all the custom shot limit zones in a struct so we can loop through them
     struct shotLimitZones
     {
@@ -44,9 +41,6 @@ public:
         std::string flagType;
     };
     std::vector<shotLimitZones> slzs;
-
-    // Keep track of all of the flags that are picked up and are limited
-    std::vector<int> activeFlagIDs;
 
     // We'll be keeping track of how many shots a player has remaining in a single array
     // If the value is greater than -1, then that means the player has grabbed a flag
@@ -198,7 +192,6 @@ void shotLimitZone::Event(bz_EventData *eventData)
             {
                 // If a limited flag is dropped then reset it
                 bz_resetFlag(flagDropData->flagID);
-                removeActiveFlag(flagDropData->flagID);
             }
 
             playerShotsRemaining[flagDropData->playerID] = -1;
@@ -226,11 +219,6 @@ void shotLimitZone::Event(bz_EventData *eventData)
                         // Keep track of shot limits here
                         playerShotsRemaining[flagData->playerID] = slzs[i].shotLimit;
                         firstShotWarning[flagData->playerID] = true;
-
-                        // Because we don't want people to drop the flag outside the zone and then grab it again
-                        // we'll be keeping track of flag IDs and watch the flag dropped to reset them if it's
-                        // out of our limited flags
-                        activeFlagIDs.push_back(flagData->flagID);
                     }
                 }
             }
@@ -253,11 +241,8 @@ void shotLimitZone::Event(bz_EventData *eventData)
                     // Decrement the shot count so we can drop down to -1 so we can ignore it in the future
                     playerShotsRemaining[playerID]--;
 
-                    // Mark the flag that player has as inactive
-                    removeActiveFlag(bz_getPlayerFlagID(playerID));
-
                     // Take the player's flag
-                    bz_removePlayerFlag(playerID);
+                    bz_resetFlag(bz_getPlayerFlagID(playerID));
                 }
                 else if (playerShotsRemaining[playerID] % 5 == 0 ||
                          playerShotsRemaining[playerID] <= 3 ||
@@ -279,15 +264,5 @@ void shotLimitZone::Event(bz_EventData *eventData)
 
         default:
         break;
-    }
-}
-
-void shotLimitZone::removeActiveFlag(int flagID)
-{
-    if (!activeFlagIDs.empty() && std::find(activeFlagIDs.begin(), activeFlagIDs.end(), flagID) != activeFlagIDs.end())
-    {
-        // Remove the flag ID from the vector so it can no longer be marked as active
-        int vectorPosition = std::find(activeFlagIDs.begin(), activeFlagIDs.end(), flagID) - activeFlagIDs.begin();
-        activeFlagIDs.erase(activeFlagIDs.begin() + vectorPosition);
     }
 }
