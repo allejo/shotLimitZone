@@ -16,10 +16,6 @@ Shot Limit Zone
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <algorithm>
-#include <iostream>
-#include <stdio.h>
-
 #include "bzfsAPI.h"
 
 class shotLimitZone : public bz_Plugin, bz_CustomMapObjectHandler
@@ -47,9 +43,11 @@ public:
     // with a shot limit so we'll keep count of how many.
     int playerShotsRemaining[256];
 
-    // We'll keeping track if we need to send a player a message after their first shot to
+    // We'll be keeping track if we need to send a player a message after their first shot to
     // show them that they have a limited number of shots. If the shot limit is 10 and this
     // value is set to true, the we will warn them at 9 shots remaining.
+    // FIXME: Unfortunately this is not very useful if the shot limit is 1. Perhaps notify
+    // of shot limit on grab rather than on first shot.
     bool firstShotWarning[256];
 };
 
@@ -57,9 +55,6 @@ BZ_PLUGIN(shotLimitZone)
 
 void shotLimitZone::Init(const char* /*commandLine*/)
 {
-    // Send a debug message
-    bz_debugMessage(4, "Shot Limit Zone plugin loaded.");
-
     // Register our events
     Register(bz_eFlagDroppedEvent);
     Register(bz_eFlagGrabbedEvent);
@@ -73,9 +68,6 @@ void shotLimitZone::Init(const char* /*commandLine*/)
 
 void shotLimitZone::Cleanup()
 {
-    // Send a debug message
-    bz_debugMessage(4, "Shot Limit Zone plugin unloaded.");
-
     // Remove all the events this plugin was watching for
     Flush();
 
@@ -88,7 +80,7 @@ bool shotLimitZone::MapObject(bz_ApiString object, bz_CustomMapObjectInfo *data)
     // We only need to keep track of our special zones, so ignore everything else
     if (object != "SHOTLIMITZONE" || !data)
     {
-        return 0;
+        return false;
     }
 
     // We found one of our custom zones so create something we can push to the struct
@@ -153,7 +145,7 @@ bool shotLimitZone::MapObject(bz_ApiString object, bz_CustomMapObjectInfo *data)
     slzs.push_back(newSLZ);
 
     // Return true because we handled the map object
-    return 1;
+    return true;
 }
 
 void shotLimitZone::Event(bz_EventData *eventData)
@@ -161,39 +153,15 @@ void shotLimitZone::Event(bz_EventData *eventData)
     // Switch through the events we'll be watching
     switch (eventData->eventType)
     {
-        case bz_ePlayerDieEvent:
-        case bz_ePlayerJoinEvent:
-        {
-            // Because boths these events will do exactly the same thing, let's have just one case and create
-            // the respective data object respective to the event
-            //
-            // Set the player's shots remaining to -1 because if it's greater than -1 that means we need to
-            // keep track of the amount of shots he has left and remove the flag when necessary
-            if (eventData->eventType == bz_ePlayerDieEvent)
-            {
-                bz_PlayerDieEventData_V1* data = (bz_PlayerDieEventData_V1*)eventData;
-                playerShotsRemaining[data->playerID] = -1;
-                firstShotWarning[data->playerID] = false;
-            }
-            else if (eventData->eventType == bz_ePlayerJoinEvent)
-            {
-                bz_PlayerJoinPartEventData_V1* data = (bz_PlayerJoinPartEventData_V1*)eventData;
-                playerShotsRemaining[data->playerID] = -1;
-                firstShotWarning[data->playerID] = false;
-            }
-        }
-        break;
-
         case bz_eFlagDroppedEvent:
         {
             bz_FlagDroppedEventData_V1* flagDropData = (bz_FlagDroppedEventData_V1*)eventData;
-
-            // On occasion, the bz_FlagDroppedEventData_V1* will set playerID to negative one, and since I am using the playerID
-            // as an array index, if the playerID is negative then there'll be a segfault. To prevent this from happening, I will
-            // simply exit out of this case if the playerID is set to -1.
+            // The playerID here may be -1 if we just called bz_resetFlag or bz_removePlayerFlag. BZFS inadvertently triggers
+            // another flag drop event due to only updating the flag status after callEvents.
+            // Alternatively we could avoid this problem by calling those flag reset functions on subsequent event calls such as
+            // on eTickEvent.
             if (flagDropData->playerID < 0)
             {
-                bz_resetFlag(flagDropData->flagID);
                 return;
             }
 
@@ -203,16 +171,15 @@ void shotLimitZone::Event(bz_EventData *eventData)
             {
                 bz_resetFlag(flagDropData->flagID);
             }
-
-            // Reset their array values for next usage
-            playerShotsRemaining[flagDropData->playerID] = -1;
-            firstShotWarning[flagDropData->playerID] = false;
         }
         break;
 
         case bz_eFlagGrabbedEvent:
         {
             bz_FlagGrabbedEventData_V1* flagData = (bz_FlagGrabbedEventData_V1*)eventData;
+
+            playerShotsRemaining[flagData->playerID] = -1;
+            firstShotWarning[flagData->playerID] = false;
 
             // Loop through all the shot limit zones that we have in memory to check if a flag was grabbed
             // inside of a zone
@@ -230,6 +197,7 @@ void shotLimitZone::Event(bz_EventData *eventData)
                         // Keep track of shot limits here
                         playerShotsRemaining[flagData->playerID] = slzs[i].shotLimit;
                         firstShotWarning[flagData->playerID] = true;
+                        break;
                     }
                 }
             }
@@ -253,7 +221,7 @@ void shotLimitZone::Event(bz_EventData *eventData)
                     playerShotsRemaining[playerID]--;
 
                     // Take the player's flag
-                    bz_resetFlag(bz_getPlayerFlagID(playerID));
+                    bz_removePlayerFlag(playerID);
                 }
                 else if (playerShotsRemaining[playerID] % 5 == 0 ||
                          playerShotsRemaining[playerID] <= 3 ||
