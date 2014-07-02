@@ -223,9 +223,7 @@ void shotLimitZone::Event(bz_EventData *eventData)
                     // Take the player's flag
                     bz_removePlayerFlag(playerID);
                 }
-                else if (playerShotsRemaining[playerID] % 5 == 0 ||
-                         playerShotsRemaining[playerID] <= 3 ||
-                         firstShotWarning[playerID])
+                else if ((playerShotsRemaining[playerID] % 5 == 0 || playerShotsRemaining[playerID] <= 3 || firstShotWarning[playerID]) && playerShotsRemaining[playerID] > 0)
                 {
                     // If the shot count is less than or equal to 3, is divisable by 5, or it's their first shot
                     // after the flag grab, notify the player
