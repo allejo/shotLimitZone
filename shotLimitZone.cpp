@@ -59,7 +59,6 @@ void shotLimitZone::Init(const char* /*commandLine*/)
     Register(bz_eFlagDroppedEvent);
     Register(bz_eFlagGrabbedEvent);
     Register(bz_ePlayerDieEvent);
-    Register(bz_ePlayerJoinEvent);
     Register(bz_eShotFiredEvent);
 
     // Register our custom BZFlag zones
@@ -201,6 +200,14 @@ void shotLimitZone::Event(bz_EventData *eventData)
                     }
                 }
             }
+        }
+        break;
+
+        case bz_ePlayerDieEvent: // This event is called each time a tank is killed.
+        {
+            bz_PlayerDieEventData_V1* dieData = (bz_PlayerDieEventData_V1*)eventData;
+
+            playerShotsRemaining[dieData->playerID] = 0;
         }
         break;
 
