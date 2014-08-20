@@ -16,12 +16,23 @@ Shot Limit Zone
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <sstream>
+
 #include "bzfsAPI.h"
+
+// Define plugin name
+const std::string PLUGIN_NAME = "Shot Limit Zones";
+
+// Define plugin version numbering
+const int MAJOR = 1;
+const int MINOR = 0;
+const int REV = 1;
+const int BUILD = 29;
 
 class shotLimitZone : public bz_Plugin, bz_CustomMapObjectHandler
 {
 public:
-    virtual const char* Name (){return "Shot Limit Zones";}
+    virtual const char* Name ();
     virtual void Init (const char* config);
     virtual void Cleanup (void);
     virtual void Event (bz_EventData *eventData);
@@ -53,12 +64,28 @@ public:
 
 BZ_PLUGIN(shotLimitZone)
 
+const char* shotLimitZone::Name (void)
+{
+    static std::string pluginBuild = "";
+
+    if (!pluginBuild.size())
+    {
+        std::ostringstream pluginBuildStream;
+
+        pluginBuildStream << PLUGIN_NAME << " " << MAJOR << "." << MINOR << "." << REV << " (" << BUILD << ")";
+        pluginBuild = pluginBuildStream.str();
+    }
+
+    return pluginBuild.c_str();
+}
+
 void shotLimitZone::Init(const char* /*commandLine*/)
 {
     // Register our events
     Register(bz_eFlagDroppedEvent);
     Register(bz_eFlagGrabbedEvent);
     Register(bz_ePlayerDieEvent);
+    Register(bz_ePlayerJoinEvent);
     Register(bz_eShotFiredEvent);
 
     // Register our custom BZFlag zones
@@ -207,7 +234,16 @@ void shotLimitZone::Event(bz_EventData *eventData)
         {
             bz_PlayerDieEventData_V1* dieData = (bz_PlayerDieEventData_V1*)eventData;
 
-            playerShotsRemaining[dieData->playerID] = 0;
+            playerShotsRemaining[dieData->playerID] = -1;
+        }
+        break;
+
+        case bz_ePlayerJoinEvent: // This event is called each time a player joins the game
+        {
+            bz_PlayerJoinPartEventData_V1* joinData = (bz_PlayerJoinPartEventData_V1*)eventData;
+
+            int playerID = joinData->playerID;
+            playerShotsRemaining[playerID] = -1;
         }
         break;
 
