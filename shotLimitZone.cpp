@@ -1,6 +1,6 @@
 /*
 Shot Limit Zone
-    Copyright (C) 2013-2014 Vladimir Jimenez
+    Copyright (C) 2013-2015 Vladimir Jimenez
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,10 +26,22 @@ const std::string PLUGIN_NAME = "Shot Limit Zones";
 // Define plugin version numbering
 const int MAJOR = 1;
 const int MINOR = 0;
-const int REV = 1;
-const int BUILD = 29;
+const int REV = 2;
+const int BUILD = 30;
 
-class shotLimitZone : public bz_Plugin, bz_CustomMapObjectHandler
+class ShotLimitZone : public bz_CustomZoneObject
+{
+public:
+    ShotLimitZone() : bz_CustomZoneObject()
+    {
+        shotLimit = 5;
+    }
+
+    int shotLimit;
+    std::vector<std::string> flags;
+};
+
+class ShotLimitZonePlugin : public bz_Plugin, bz_CustomMapObjectHandler
 {
 public:
     virtual const char* Name ();
@@ -40,14 +52,7 @@ public:
     virtual bool MapObject (bz_ApiString object, bz_CustomMapObjectInfo *data);
 
     // Store all the custom shot limit zones in a struct so we can loop through them
-    struct shotLimitZones
-    {
-        float position[3];
-        float size[3];
-        int shotLimit;
-        std::string flagType;
-    };
-    std::vector<shotLimitZones> slzs;
+    std::vector<ShotLimitZone> slzs;
 
     // We'll be keeping track of how many shots a player has remaining in a single array
     // If the value is greater than -1, then that means the player has grabbed a flag
@@ -62,9 +67,9 @@ public:
     bool firstShotWarning[256];
 };
 
-BZ_PLUGIN(shotLimitZone)
+BZ_PLUGIN(ShotLimitZonePlugin)
 
-const char* shotLimitZone::Name (void)
+const char* ShotLimitZonePlugin::Name (void)
 {
     static std::string pluginBuild = "";
 
@@ -79,7 +84,7 @@ const char* shotLimitZone::Name (void)
     return pluginBuild.c_str();
 }
 
-void shotLimitZone::Init(const char* /*commandLine*/)
+void ShotLimitZonePlugin::Init(const char* /*commandLine*/)
 {
     // Register our events
     Register(bz_eFlagDroppedEvent);
@@ -89,19 +94,19 @@ void shotLimitZone::Init(const char* /*commandLine*/)
     Register(bz_eShotFiredEvent);
 
     // Register our custom BZFlag zones
-    bz_registerCustomMapObject("shotLimitZone", this);
+    bz_registerCustomMapObject("ShotLimitZone", this);
 }
 
-void shotLimitZone::Cleanup()
+void ShotLimitZonePlugin::Cleanup()
 {
     // Remove all the events this plugin was watching for
     Flush();
 
     // Remove the custom BZFlag zones
-    bz_removeCustomMapObject("shotLimitZone");
+    bz_removeCustomMapObject("ShotLimitZone");
 }
 
-bool shotLimitZone::MapObject(bz_ApiString object, bz_CustomMapObjectInfo *data)
+bool ShotLimitZonePlugin::MapObject(bz_ApiString object, bz_CustomMapObjectInfo *data)
 {
     // We only need to keep track of our special zones, so ignore everything else
     if (object != "SHOTLIMITZONE" || !data)
@@ -110,7 +115,8 @@ bool shotLimitZone::MapObject(bz_ApiString object, bz_CustomMapObjectInfo *data)
     }
 
     // We found one of our custom zones so create something we can push to the struct
-    shotLimitZones newSLZ;
+    ShotLimitZone newSLZ;
+    newSLZ.handleDefaultOptions(data);
 
     // Loop through the information in this zone
     for (int i = 0; i < data->data.size(); i++)
@@ -130,42 +136,29 @@ bool shotLimitZone::MapObject(bz_ApiString object, bz_CustomMapObjectInfo *data)
             // Let's not care about case so just make everything lower case
             std::string checkval = bz_tolower(values->get(0).c_str());
 
-            // Check if we found the position specifications
-            if ((checkval == "position" || checkval == "pos") && values->size() > 3)
-            {
-                newSLZ.position[0] = (float)atof(values->get(1).c_str());
-                newSLZ.position[1] = (float)atof(values->get(2).c_str());
-                newSLZ.position[2] = (float)atof(values->get(3).c_str());
-            }
-
-            // Check if we found the size specifications
-            if (checkval == "size" && values->size() > 3)
-            {
-                newSLZ.size[0] = (float)atof(values->get(1).c_str());
-                newSLZ.size[1] = (float)atof(values->get(2).c_str());
-                newSLZ.size[2] = (float)atof(values->get(3).c_str());
-            }
-
             // Check if we found the shot limit specification
             if (checkval == "shotlimit" && values->size() > 1)
             {
-                newSLZ.shotLimit = atoi(values->get(1).c_str());
+                try
+                {
+                    newSLZ.shotLimit = std::stoi(values->get(1).c_str());
+                }
+                catch (std::exception const &e)
+                {
+                    bz_debugMessagef(0, "Found invalid ");
+                }
             }
 
             // Check if we found the flag we'll be limiting
             if (checkval == "flag" && values->size() > 1)
             {
-                newSLZ.flagType = bz_toupper(values->get(1).c_str());
+                newSLZ.flags.push_back(bz_toupper(values->get(1).c_str()));
             }
         }
 
         // Avoid memory leaks
         bz_deleteStringList(values);
     }
-
-    // Send a debug message of the zone we're monitoring
-    bz_debugMessagef(2, "A shotLimitZone has been found, zone loaded with credentials:\nPos: [%lf, %lf, %lf]\nSize: [%lf, %lf, %lf]\nShot Limit: %i\nFlag: %s",
-             newSLZ.position[0], newSLZ.position[1], newSLZ.position[2], newSLZ.size[0], newSLZ.size[1], newSLZ.size[2], newSLZ.shotLimit, newSLZ.flagType.c_str());
 
     // Add the information we got and add it to the struct
     slzs.push_back(newSLZ);
@@ -174,7 +167,7 @@ bool shotLimitZone::MapObject(bz_ApiString object, bz_CustomMapObjectInfo *data)
     return true;
 }
 
-void shotLimitZone::Event(bz_EventData *eventData)
+void ShotLimitZonePlugin::Event(bz_EventData *eventData)
 {
     // Switch through the events we'll be watching
     switch (eventData->eventType)
@@ -182,6 +175,7 @@ void shotLimitZone::Event(bz_EventData *eventData)
         case bz_eFlagDroppedEvent:
         {
             bz_FlagDroppedEventData_V1* flagDropData = (bz_FlagDroppedEventData_V1*)eventData;
+
             // The playerID here may be -1 if we just called bz_resetFlag or bz_removePlayerFlag. BZFS inadvertently triggers
             // another flag drop event due to only updating the flag status after callEvents.
             // Alternatively we could avoid this problem by calling those flag reset functions on subsequent event calls such as
@@ -211,19 +205,17 @@ void shotLimitZone::Event(bz_EventData *eventData)
             // inside of a zone
             for (int i = 0; i < slzs.size(); i++)
             {
-                if (flagData->pos[0] >= slzs[i].position[0] - slzs[i].size[0] &&
-                    flagData->pos[0] <= slzs[i].position[0] + slzs[i].size[0] &&
-                    flagData->pos[1] >= slzs[i].position[1] - slzs[i].size[1] &&
-                    flagData->pos[1] <= slzs[i].position[1] + slzs[i].size[1] &&
-                    flagData->pos[2] >= slzs[i].position[2] &&
-                    flagData->pos[2] <= slzs[i].position[2] + slzs[i].size[2])
+                if (slzs[i].pointInZone(flagData->pos))
                 {
-                    if (bz_getFlagName(flagData->flagID).c_str() == slzs[i].flagType)
+                    for (auto &flag : slzs[i].flags)
                     {
-                        // Keep track of shot limits here
-                        playerShotsRemaining[flagData->playerID] = slzs[i].shotLimit;
-                        firstShotWarning[flagData->playerID] = true;
-                        break;
+                        if (bz_getFlagName(flagData->flagID).c_str() == flag)
+                        {
+                            // Keep track of shot limits here
+                            playerShotsRemaining[flagData->playerID] = slzs[i].shotLimit;
+                            firstShotWarning[flagData->playerID] = true;
+                            break;
+                        }
                     }
                 }
             }
