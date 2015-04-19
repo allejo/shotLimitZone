@@ -1,7 +1,7 @@
-Shot Limit Zone
+Shot Limit Zone ![Minimum BZFlag Version](https://img.shields.io/badge/BZFlag-v2.4.3+-blue.svg) [![Current Release](https://img.shields.io/badge/Stable_Release-v1.0.1-orange.svg)](https://github.com/allejo/shotLimitZone/releases/tag/v1.0.1.29)
 ===============
 
-A BZFlag plugin that allows you add shot limits to flag based on the location of the flag. The difference between this plugin and the default BZFS `-sl` option is that by using the option, you are limiting all of the flags of the same type where with this plugin you will only limit the shot limit of a flag if grabbed from a specific area in the map. This plugin will not overwrite the -sl option.
+A BZFlag plugin that allows you add shot limits to flag based on the location of the flag. The difference between this plugin and the default BZFS `-sl` option is that by using the option, you are limiting all of the flags of the same type where with this plugin you will only limit the shot limit of a flag if grabbed from a specific area in the map. This plugin will not overwrite the `-sl` option.
 
 Author
 ------
@@ -13,7 +13,7 @@ Compiling
 
 ### Requirement
 
-- BZFlag 2.4.3+ (after Jan 8th 2014)
+- BZFlag 2.4.3+
 
 ### How to Compile
 
@@ -25,19 +25,15 @@ Compiling
 
     `cd bzflag/plugins`
 
-3.  Create a plugin using the `newplug.sh` script.
+3.  Run a git clone of this repository from within the plugins directory. This should have created a new shotLimitZone directory within the plugins directory.
 
-    `sh newplug.sh shotLimitZone`
+    `git clone -b release https://github.com/allejo/shotLimitZone.git`
 
-4.  Delete the newly create shotLimitZone directory.
+4.  Add the plug-in to the Linux build system
 
-    `rm -rf shotLimitZone`
+    `sh addToBuild.sh shotLimitZone`
 
-5.  Run a git clone of this repository from within the plugins directory. This should have created a new shotLimitZone directory within the plugins directory.
-
-    `git clone https://github.com/allejo/shotLimitZone.git`
-
-6.  Instruct the build system to generate a Makefile and then compile and install the plugin.
+5.  Instruct the build system to generate a Makefile and then compile and install the plugin.
 
     `cd ..; ./autogen.sh; ./configure; make; make install;`
     
@@ -48,11 +44,11 @@ Compiling
 
 2.  Pull the changes from Git.
 
-    `git pull origin master`
+    `git pull origin release`
 
 3.  (Optional) If you have made local changes to any of the files from this project, you may receive conflict errors where you may resolve the conflicts yourself or you may simply overwrite your changes with whatever is in the repository, which is recommended. *If you have a conflict every time you update because of your local change, submit a pull request and it will be accepted, provided it's a reasonable change.*
 
-    `git reset --hard origin/master; git pull`
+    `git reset --hard origin/release; git pull`
 
 4.  Compile the changes.
 
@@ -87,17 +83,11 @@ In this example, any SW flag grabbed from inside of this zone will be limited to
 
 * This custom zone will not actually spawn a SW flag, you will need to add a regular zone object to do so.
 * The name ('shotLimitZone') of the object is case-insensitive so camel case is not required.
-* The "position" field can also be written shorthand as "pos."
-* These special zones cannot be rotated as of right now; this will be implemented in a future release.
 
 Planned Features
 ----------------
 
 This plugin has a lot of room for additions and these are the ones I have in mind. If you don't see your idea here, please suggest it by creating an "issue" and marking it as an "enchancement."
-
-- Support more than flag type per zone
-
-- Add rotation support for the shotLimitZone
 
 - Add possible zone generation to the world blob to spawn a flag instead of forcing the user to add it?
 
