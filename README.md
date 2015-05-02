@@ -70,13 +70,28 @@ Map Details
 
 In this example, any SW flag grabbed from inside of this zone will be limited to 10 shots only.
 
+**Box**
 
-    shotLimitZone
-        position 0 0 0
-        size 10 10 5
-        shotLimit 10
-        flag SW
-    end
+```
+shotLimitZone
+    position 0 0 0
+    size 10 10 5
+    shotLimit 10
+    flag SW
+end
+```
+
+**Cylinder**
+
+```
+shotLimitZone
+    position 0 0 0
+    radius 15
+    height 10
+    shotLimit 10
+    flag SW
+end
+```
 
 
 ### Notes
