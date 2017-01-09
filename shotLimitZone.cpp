@@ -1,6 +1,6 @@
 /*
 Shot Limit Zone
-    Copyright (C) 2013-2015 Vladimir Jimenez
+    Copyright (C) 2013-2017 Vladimir Jimenez
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,8 +26,8 @@ const std::string PLUGIN_NAME = "Shot Limit Zones";
 // Define plugin version numbering
 const int MAJOR = 1;
 const int MINOR = 0;
-const int REV = 2;
-const int BUILD = 30;
+const int REV = 3;
+const int BUILD = 34;
 
 class ShotLimitZone : public bz_CustomZoneObject
 {
@@ -214,6 +214,8 @@ void ShotLimitZonePlugin::Event(bz_EventData *eventData)
                             // Keep track of shot limits here
                             playerShotsRemaining[flagData->playerID] = slzs[i].shotLimit;
                             firstShotWarning[flagData->playerID] = true;
+
+                            bz_sendTextMessagef(BZ_SERVER, flagData->playerID, "%i shot%s left", slzs[i].shotLimit, (slzs[i].shotLimit > 1) ? "s" : "");
                             break;
                         }
                     }
@@ -274,7 +276,6 @@ void ShotLimitZonePlugin::Event(bz_EventData *eventData)
         }
         break;
 
-        default:
-        break;
+        default: break;
     }
 }
