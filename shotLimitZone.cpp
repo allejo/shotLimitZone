@@ -89,6 +89,7 @@ void ShotLimitZonePlugin::Init(const char* /*commandLine*/)
     // Register our events
     Register(bz_eFlagDroppedEvent);
     Register(bz_eFlagGrabbedEvent);
+    Register(bz_eFlagTransferredEvent);
     Register(bz_ePlayerDieEvent);
     Register(bz_ePlayerJoinEvent);
     Register(bz_eShotFiredEvent);
@@ -220,6 +221,20 @@ void ShotLimitZonePlugin::Event(bz_EventData *eventData)
                         }
                     }
                 }
+            }
+        }
+        break;
+
+        case bz_eFlagTransferredEvent:
+        {
+            bz_FlagTransferredEventData_V1* transferredData = (bz_FlagTransferredEventData_V1*)eventData;
+
+            if (playerShotsRemaining[transferredData->fromPlayerID] >= 0)
+            {
+                playerShotsRemaining[transferredData->toPlayerID] = playerShotsRemaining[transferredData->fromPlayerID];
+                playerShotsRemaining[transferredData->fromPlayerID] = -1;
+                firstShotWarning[transferredData->toPlayerID] = true;
+                bz_sendTextMessagef(BZ_SERVER, transferredData->toPlayerID, "%i shot%s left", playerShotsRemaining[transferredData->toPlayerID], (playerShotsRemaining[transferredData->toPlayerID] > 1) ? "s" : "");
             }
         }
         break;
