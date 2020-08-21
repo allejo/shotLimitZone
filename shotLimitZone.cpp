@@ -130,7 +130,7 @@ bool ShotLimitZonePlugin::MapObject(bz_ApiString object, bz_CustomMapObjectInfo 
     newSLZ.handleDefaultOptions(data);
 
     // Loop through the information in this zone
-    for (int i = 0; i < data->data.size(); i++)
+    for (unsigned int i = 0; i < data->data.size(); i++)
     {
         // Store the current line we're reading in an easy to access variable
         std::string temp = data->data.get(i).c_str();
@@ -214,7 +214,7 @@ void ShotLimitZonePlugin::Event(bz_EventData *eventData)
 
             // Loop through all the shot limit zones that we have in memory to check if a flag was grabbed
             // inside of a zone
-            for (int i = 0; i < slzs.size(); i++)
+            for (unsigned int i = 0; i < slzs.size(); i++)
             {
                 if (slzs[i].pointInZone(flagData->pos))
                 {
