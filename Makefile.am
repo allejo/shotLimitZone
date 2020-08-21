@@ -1,7 +1,7 @@
 lib_LTLIBRARIES = shotLimitZone.la
 
 shotLimitZone_la_SOURCES = shotLimitZone.cpp
-shotLimitZone_la_CXXFLAGS= -I$(top_srcdir)/include -I$(top_srcdir)/plugins/plugin_utils
+shotLimitZone_la_CPPFLAGS= -I$(top_srcdir)/include -I$(top_srcdir)/plugins/plugin_utils
 shotLimitZone_la_LDFLAGS = -module -avoid-version -shared
 shotLimitZone_la_LIBADD = $(top_builddir)/plugins/plugin_utils/libplugin_utils.la
 
@@ -10,9 +10,12 @@ AM_CFLAGS = $(CONF_CFLAGS)
 AM_CXXFLAGS = $(CONF_CXXFLAGS)
 
 EXTRA_DIST = \
-	LICENSE.markdown \
-	README.markdown \
-	shotLimitZone.def
+	LICENSE.md \
+	README.md \
+	shotLimitZone.def \
+	shotLimitZone.sln \
+	shotLimitZone.vcxproj \
+	shotLimitZone.vcxproj.filters
 
 MAINTAINERCLEANFILES =	\
 	Makefile.in
