@@ -1,5 +1,8 @@
-Shot Limit Zone ![Minimum BZFlag Version](https://img.shields.io/badge/BZFlag-v2.4.3+-blue.svg) [![Current Release](https://img.shields.io/badge/Stable_Release-v1.0.1-orange.svg)](https://github.com/allejo/shotLimitZone/releases/tag/v1.0.1.29)
-===============
+# Shot Limit Zone
+
+[![GitHub release](https://img.shields.io/github/release/allejo/shotLimitZone.svg)](https://github.com/allejo/shotLimitZone/releases/latest)
+![Minimum BZFlag Version](https://img.shields.io/badge/BZFlag-v2.4.4+-blue.svg)
+[![License](https://img.shields.io/github/license/allejo/shotLimitZone.svg)](/LICENSE.md)
 
 A BZFlag plugin that allows you add shot limits to flag based on the location of the flag. The difference between this plugin and the default BZFS `-sl` option is that by using the option, you are limiting all of the flags of the same type where with this plugin you will only limit the shot limit of a flag if grabbed from a specific area in the map. This plugin will not overwrite the `-sl` option.
 
