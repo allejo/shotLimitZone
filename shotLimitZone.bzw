@@ -2,7 +2,7 @@ options
     -a 0 0
     +f US{5}
     +f GM{10}
-    -loadplugin /path/to/shotLimitZone.so
+    +f TH{1}
     -ms 5
     -set _maxFlagGrabs 1
     -set _worldSize 400
