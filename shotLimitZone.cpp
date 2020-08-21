@@ -26,8 +26,8 @@ const std::string PLUGIN_NAME = "Shot Limit Zones";
 // Define plugin version numbering
 const int MAJOR = 1;
 const int MINOR = 0;
-const int REV = 3;
-const int BUILD = 34;
+const int REV = 4;
+const int BUILD = 37;
 
 class ShotLimitZone : public bz_CustomZoneObject
 {
